@@ -1,19 +1,96 @@
-const products=[
-{id:1,name:'TAG TEE / BLACK',type:'tee',price:990,badge:'RAW TAG',graphic:'tag',color:'#121212',ink:'#f5f4ef',desc:'Oversized demo tee s velkým ručním tagem přes záda.'},
-{id:2,name:'WILD TEE / WHITE',type:'tee',price:990,badge:'WILDSTYLE',graphic:'wild',color:'#f4f3ee',ink:'#111',desc:'Oversized demo tee s agresivní wildstyle kompozicí.'},
-{id:3,name:'RAW TEE / ASH',type:'tee',price:990,badge:'XEROX RAW',graphic:'raw',color:'#a7a49e',ink:'#111',desc:'Oversized demo tee s xeroxovou markerovou grafikou.'},
-{id:4,name:'WARNING HOODIE',type:'hoodie',price:1990,badge:'INDUSTRIAL',graphic:'warning',color:'#171717',ink:'#ff3b30',desc:'Heavyweight demo hoodie s industriálním warning labelem.'},
-{id:5,name:'SIGNAL HOODIE',type:'hoodie',price:1990,badge:'CREW SYMBOL',graphic:'signal',color:'#dbd9d2',ink:'#111',desc:'Heavyweight demo hoodie s crew symbolem a signálovou mřížkou.'},
-{id:6,name:'CHAOS CAP',type:'accessory',price:690,badge:'ONE SIZE',graphic:'chaos',color:'#111',ink:'#f5f4ef',desc:'Demo six-panel cap s chaos monogramem.'},
-{id:7,name:'WALL STICKER PACK',type:'accessory',price:290,badge:'6 STICKERS',graphic:'stickers',color:'#d7d4cc',ink:'#111',desc:'Sada šesti demo samolepek z DROP 001.'}
-];
-let cart=[];try{cart=JSON.parse(localStorage.getItem('nrsm-cart')||'[]')}catch{localStorage.removeItem('nrsm-cart')}if(!Array.isArray(cart))cart=[];let currentFilter='all';let activeProduct=null;let currentView='front';
-const money=n=>new Intl.NumberFormat('cs-CZ').format(n)+' Kč';
-function art(p,view='front'){let g={tag:`<text x="50%" y="54%" text-anchor="middle" font-family="Permanent Marker" font-size="74" transform="rotate(-12 150 190)">NŘŠM</text><path d="M42 255 Q150 205 262 248" fill="none" stroke="${p.ink}" stroke-width="8"/>`,wild:`<text x="50%" y="52%" text-anchor="middle" font-family="Barlow Condensed" font-weight="800" font-style="italic" font-size="74" letter-spacing="-12" transform="skewX(-12)">NŘŠM</text><path d="M35 125 275 245M42 250 268 120" stroke="${p.ink}" stroke-width="5"/>`,raw:`<rect x="38" y="100" width="225" height="150" fill="${p.ink}" opacity=".15"/><text x="50%" y="50%" text-anchor="middle" font-family="DM Mono" font-size="48" font-weight="700">NŘŠM</text><text x="50%" y="64%" text-anchor="middle" font-family="DM Mono" font-size="12">RAW / 001 / COPY</text><path d="M48 224h205" stroke="${p.ink}" stroke-width="12"/>`,warning:`<rect x="35" y="105" width="230" height="145" fill="none" stroke="${p.ink}" stroke-width="6"/><text x="50%" y="48%" text-anchor="middle" font-family="Barlow Condensed" font-size="61" font-weight="800">NŘŠM</text><text x="50%" y="63%" text-anchor="middle" font-family="DM Mono" font-size="14">WARNING // DROP 001</text>`,signal:`<circle cx="150" cy="173" r="64" fill="none" stroke="${p.ink}" stroke-width="7"/><circle cx="150" cy="173" r="30" fill="${p.ink}"/><path d="M150 65v60M150 223v60M42 173h60M198 173h60" stroke="${p.ink}" stroke-width="7"/><text x="50%" y="88%" text-anchor="middle" font-family="DM Mono" font-size="18">NŘŠM</text>`,chaos:`<text x="50%" y="57%" text-anchor="middle" font-family="Permanent Marker" font-size="52" transform="rotate(-9 150 180)">NŘŠM</text><path d="M35 110 265 260M40 255 260 105" stroke="${p.ink}" stroke-width="7"/>`,stickers:`<g font-family="Barlow Condensed" font-weight="800"><rect x="35" y="90" width="95" height="70" fill="#ff3b30"/><text x="82" y="133" text-anchor="middle" font-size="27" fill="#fff">NŘŠM</text><circle cx="215" cy="124" r="45" fill="#111"/><text x="215" y="133" text-anchor="middle" font-size="25" fill="#fff">001</text><text x="150" y="230" text-anchor="middle" font-family="Permanent Marker" font-size="50">NŘŠM</text></g>`}[p.graphic];if(view==='back')g=`<text x="50%" y="46%" text-anchor="middle" font-family="Permanent Marker" font-size="62" transform="rotate(-7 150 160)">NŘŠM</text><text x="50%" y="62%" text-anchor="middle" font-family="DM Mono" font-size="12">DROP 001 / NOT FOR EVERYONE</text><path d="M55 220h190" stroke="${p.ink}" stroke-width="4"/>`;if(view==='detail')g=`<circle cx="150" cy="170" r="95" fill="${p.ink}" opacity=".12"/><text x="50%" y="54%" text-anchor="middle" font-family="DM Mono" font-size="20">PRINT DETAIL</text><text x="50%" y="63%" text-anchor="middle" font-family="DM Mono" font-size="12">DEMO GRAPHIC / 001</text>`;return `<svg viewBox="0 0 300 410" role="img" aria-label="${p.name} ${view}"><rect width="300" height="410" fill="#c8c5bd"/><path d="M78 67 122 45h56l44 22 42 60-35 28v206H71V155l-35-28z" fill="${p.color}"/><path d="M123 46v35h54V46" fill="none" stroke="#777" stroke-width="2"/>${g}</svg>`}
-function renderProducts(){document.querySelector('#products').innerHTML=products.filter(p=>currentFilter==='all'||p.type===currentFilter).map(p=>`<article class="product" data-id="${p.id}" tabindex="0" role="button" aria-label="Zobrazit ${p.name}"><div class="product-art"><span class="badge">${p.badge}</span>${art(p)}</div><div class="product-info"><div><strong>${p.name}</strong><small>${p.type==='tee'?'OVERSIZED TEE':p.type==='hoodie'?'HEAVYWEIGHT HOODIE':'DROP ACCESSORY'}</small></div><strong>${money(p.price)}</strong></div></article>`).join('')}
-function renderCart(){let total=cart.reduce((a,x)=>a+x.price*x.qty,0),count=cart.reduce((a,x)=>a+x.qty,0);document.querySelectorAll('[data-count]').forEach(e=>e.textContent=count);document.querySelectorAll('[data-total]').forEach(e=>e.textContent=money(total));document.querySelector('.cart-items').innerHTML=cart.map(x=>`<div class="cart-item">${art(x)}<div><strong>${x.name}</strong><br><small>${x.size||'ONE SIZE'} · ${money(x.price)}</small><br><button data-remove="${x.key}">ODEBRAT</button></div><span>×${x.qty}</span></div>`).join('');document.querySelector('.empty').hidden=cart.length>0;document.querySelector('.cart-bottom').style.display=cart.length?'block':'none'}
-function persist(){localStorage.setItem('nrsm-cart',JSON.stringify(cart));renderCart()}
-function showProduct(id){activeProduct=products.find(p=>p.id===id);currentView='front';renderDetail();document.querySelector('#product').showModal()}
-function renderDetail(){const p=activeProduct;document.querySelector('.product-detail').innerHTML=`<div class="product-view">${art(p,currentView)}<div class="view-switch"><button class="${currentView==='front'?'active':''}" data-view="front">FRONT</button><button class="${currentView==='back'?'active':''}" data-view="back">BACK</button><button class="${currentView==='detail'?'active':''}" data-view="detail">DETAIL</button></div></div><div class="detail-copy"><p class="kicker">[ DROP 001 / ${p.badge} ]</p><h2>${p.name}</h2><p class="price">${money(p.price)}</p><p>${p.desc}</p><div class="sizes">${p.type==='accessory'?'<button class="selected" data-size="ONE SIZE">ONE SIZE</button>':['S','M','L','XL'].map((s,i)=>`<button class="${i===1?'selected':''}" data-size="${s}">${s}</button>`).join('')}</div><button class="button red add">PŘIDAT DO KOŠÍKU <span>+</span></button><div class="detail-list">DEMO PRODUKT / FINÁLNÍ MATERIÁL A GRAMÁŽ DOPLŇ PŘED PRODEJEM<br>LIMITOVANÝ DROP / SKLAD NENÍ SIMULOVÁN<br>VRÁCENÍ A DOPRAVA SE ZOBRAZÍ PŘI OSTRÉ INTEGRACI</div><p class="related">RELATED: ${products.filter(x=>x.id!==p.id).slice(0,2).map(x=>x.name).join(' / ')}</p></div>`}
-function openCart(){document.querySelector('#cart').classList.add('open');document.querySelector('.shade').classList.add('show');document.querySelector('#cart').setAttribute('aria-hidden','false');document.querySelector('.cart-button').setAttribute('aria-expanded','true')}function closeCart(){document.querySelector('#cart').classList.remove('open');document.querySelector('.shade').classList.remove('show');document.querySelector('#cart').setAttribute('aria-hidden','true');document.querySelector('.cart-button').setAttribute('aria-expanded','false')}
-document.addEventListener('click',e=>{let product=e.target.closest('.product');if(product)showProduct(+product.dataset.id);if(e.target.closest('.cart-button'))openCart();if(e.target.closest('.menu')){let nav=document.querySelector('nav');nav.classList.toggle('open');e.target.setAttribute('aria-expanded',nav.classList.contains('open'))}if(e.target.closest('.close')||e.target==document.querySelector('.shade'))closeCart();if(e.target.matches('[data-filter]')){currentFilter=e.target.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===e.target));renderProducts()}if(e.target.matches('.dialog-close'))e.target.closest('dialog').close();if(e.target.matches('[data-view]')){currentView=e.target.dataset.view;renderDetail()}if(e.target.matches('.sizes button')){e.target.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));e.target.classList.add('selected')}if(e.target.matches('.add')){let size=document.querySelector('.sizes .selected').dataset.size,key=activeProduct.id+'-'+size,old=cart.find(x=>x.key===key);old?old.qty++:cart.push({...activeProduct,size,key,qty:1});persist();e.target.closest('dialog').close();openCart()}if(e.target.matches('[data-remove]')){cart=cart.filter(x=>x.key!==e.target.dataset.remove);persist()}if(e.target.closest('.checkout')&&cart.length){closeCart();document.querySelector('#checkout').showModal()}});document.addEventListener('keydown',e=>{let p=e.target.closest('.product');if(p&&(e.key==='Enter'||e.key===' ')){e.preventDefault();showProduct(+p.dataset.id)}});document.querySelector('#newsletter').addEventListener('submit',e=>{e.preventDefault();document.querySelector('.message').textContent='Jsi na seznamu pro další drop.';e.target.reset()});document.querySelector('#checkout-form').addEventListener('submit',e=>{e.preventDefault();e.target.querySelector('button').textContent='PŘIPOJ PLATEBNÍ BRÁNU PRO OSTRÝ PRODEJ'});renderProducts();renderCart();
+const state = { product: '', file: null, fileUrl: '' };
+const maxFileSize = 10 * 1024 * 1024;
+const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const productLabel = document.querySelector('#selected-product');
+const photoInput = document.querySelector('#pet-photo');
+const dropzone = document.querySelector('#dropzone');
+const uploadMessage = document.querySelector('#upload-message');
+const preview = document.querySelector('#preview');
+const previewImage = document.querySelector('#preview-image');
+const fileName = document.querySelector('#file-name');
+const formStatus = document.querySelector('#form-status');
+
+function setMessage(element, message, type = '') {
+  element.textContent = message;
+  element.dataset.state = type;
+}
+
+function selectProduct(product) {
+  state.product = product;
+  productLabel.textContent = `Vybráno: ${product}`;
+  document.querySelectorAll('.product-card').forEach((card) => {
+    const selected = card.dataset.product === product;
+    card.classList.toggle('selected', selected);
+    card.setAttribute('aria-pressed', String(selected));
+  });
+  document.querySelector('#fotka').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function clearPhoto() {
+  if (state.fileUrl) URL.revokeObjectURL(state.fileUrl);
+  state.fileUrl = '';
+  state.file = null;
+  photoInput.value = '';
+  previewImage.removeAttribute('src');
+  preview.hidden = true;
+  setMessage(uploadMessage, '');
+}
+
+function showPhoto(file) {
+  if (state.fileUrl) URL.revokeObjectURL(state.fileUrl);
+  state.fileUrl = '';
+  state.file = null;
+  preview.hidden = true;
+  if (!allowedTypes.has(file.type)) {
+    setMessage(uploadMessage, 'Vyber fotku ve formátu JPG, PNG nebo WebP.', 'error');
+    return;
+  }
+  if (file.size > maxFileSize) {
+    setMessage(uploadMessage, 'Tato fotka je větší než 10 MB. Zkus prosím menší soubor.', 'error');
+    return;
+  }
+  state.file = file;
+  state.fileUrl = URL.createObjectURL(file);
+  previewImage.src = state.fileUrl;
+  fileName.textContent = file.name;
+  preview.hidden = false;
+  setMessage(uploadMessage, 'Fotka je připravená pouze pro lokální náhled.', 'ready');
+}
+
+document.querySelectorAll('.product-card').forEach((card) => {
+  card.setAttribute('aria-pressed', 'false');
+  card.addEventListener('click', () => selectProduct(card.dataset.product));
+});
+
+photoInput.addEventListener('change', () => {
+  if (photoInput.files?.[0]) showPhoto(photoInput.files[0]);
+});
+
+dropzone.addEventListener('dragover', (event) => {
+  event.preventDefault();
+  dropzone.classList.add('dragover');
+});
+
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', (event) => {
+  event.preventDefault();
+  dropzone.classList.remove('dragover');
+  const [file] = event.dataTransfer.files;
+  if (file) showPhoto(file);
+});
+
+document.querySelector('#remove-photo').addEventListener('click', clearPhoto);
+
+document.querySelector('#customizer-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  if (!state.product) {
+    setMessage(formStatus, 'Nejdříve vyber typ produktu.', 'error');
+    return;
+  }
+  if (!state.file || !state.fileUrl) {
+    setMessage(formStatus, 'Nejdříve vyber fotku mazlíčka.', 'error');
+    return;
+  }
+  const style = document.querySelector('input[name="style"]:checked').value;
+  setMessage(formStatus, `Podklady jsou připravené: ${state.product}, styl ${style}. Objednávka ani odeslání fotografie se v této verzi neprovádí.`, 'ready');
+});
