@@ -1,1 +1,11 @@
-{"name":"nrsm-drop-001","private":true,"version":"1.0.0","scripts":{"check":"node --check public/store.js"},"engines":{"node":"24.x"}}
+{
+  "name": "mazliprint-storefront",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "check": "node --check public/store.js"
+  },
+  "engines": {
+    "node": "24.x"
+  }
+}
